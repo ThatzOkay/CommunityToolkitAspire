@@ -70,7 +70,7 @@ public static class InfluxDBResourceBuilderExtensions
 
         return builder
             .AddResource(influxDBServer)
-            .WithEndpoint(port: port, targetPort: 8086, scheme: InfluxDBServerResource.PrimaryEndpointName, isProxied: false)
+            .WithEndpoint(port: port, targetPort: InfluxDBServerResource.DefaultHttpPort, scheme: InfluxDBServerResource.PrimaryEndpointName)
             .WithImage(InfluxDBContainerImageTags.Image, InfluxDBContainerImageTags.Tag)
             .WithImageRegistry(InfluxDBContainerImageTags.Registry)
             .WithEnvironment("DOCKER_INFLUXDB_INIT_MODE", "setup")

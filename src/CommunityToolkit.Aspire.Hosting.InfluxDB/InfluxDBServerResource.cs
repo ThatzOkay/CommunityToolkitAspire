@@ -6,6 +6,7 @@ namespace Aspire.Hosting.ApplicationModel;
 public class InfluxDBServerResource(string name, ParameterResource token) : ContainerResource(name), IResourceWithConnectionString
 {
     internal const string PrimaryEndpointName = "http";
+    internal const int DefaultHttpPort = 8086;
 
     private EndpointReference? _primaryEndpoint;
 

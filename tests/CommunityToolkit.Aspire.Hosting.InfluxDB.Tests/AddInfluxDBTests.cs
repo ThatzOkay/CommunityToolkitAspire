@@ -1,20 +1,96 @@
 ﻿using Aspire.Hosting;
+using System.Net.Sockets;
 
 namespace CommunityToolkit.Aspire.Hosting.InfluxDB.Tests;
 
 public class AddInfluxDBTests
 {
     [Fact]
-    public void AddRavenServerResource()
+    public async Task AddInfluxDBContainerWithDefaultsAddsAnnotationMetadata()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
-        appBuilder.AddInfluxDB("influxdb");
+
+        var tokenParameter = appBuilder.AddParameter("token", "my-secret-token");
+        var influxdb = appBuilder.AddInfluxDB("influxdb", token: tokenParameter);
+
         using var app = appBuilder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var serverResource = Assert.Single(appModel.Resources.OfType<InfluxDBServerResource>());
-        Assert.Equal("influxdb", serverResource.Name);
+        var containerResource = Assert.Single(appModel.Resources.OfType<InfluxDBServerResource>());
+        Assert.Equal("influxdb", containerResource.Name);
+
+        var endpoints = containerResource.Annotations.OfType<EndpointAnnotation>();
+        Assert.Single(endpoints);
+
+        var primaryEndpoint = Assert.Single(endpoints, e => e.Name == "http");
+        Assert.Equal(InfluxDBServerResource.DefaultHttpPort, primaryEndpoint.TargetPort);
+        Assert.False(primaryEndpoint.IsExternal);
+        Assert.Equal("http", primaryEndpoint.Name);
+        Assert.Null(primaryEndpoint.Port);
+        Assert.Equal(ProtocolType.Tcp, primaryEndpoint.Protocol);
+        Assert.Equal("http", primaryEndpoint.Transport);
+        Assert.Equal("http", primaryEndpoint.UriScheme);
+
+        var containerAnnotation = Assert.Single(containerResource.Annotations.OfType<ContainerImageAnnotation>());
+        Assert.Equal(InfluxDBContainerImageTags.Tag, containerAnnotation.Tag);
+        Assert.Equal(InfluxDBContainerImageTags.Image, containerAnnotation.Image);
+        Assert.Equal(InfluxDBContainerImageTags.Registry, containerAnnotation.Registry);
+
+        var config = await influxdb.Resource.GetEnvironmentVariableValuesAsync();
+
+        Assert.Collection(config,
+            env =>
+            {
+                Assert.Equal("DOCKER_INFLUXDB_INIT_MODE", env.Key);
+                Assert.Equal("setup", env.Value);
+            },
+            env =>
+            {
+                Assert.Equal("DOCKER_INFLUXDB_INIT_USERNAME", env.Key);
+                Assert.Equal("my-user", env.Value);
+            },
+            env =>
+            {
+                Assert.Equal("DOCKER_INFLUXDB_INIT_PASSWORD", env.Key);
+                Assert.Equal("my-password", env.Value);
+            },
+            env =>
+            {
+                Assert.Equal("DOCKER_INFLUXDB_INIT_ORG", env.Key);
+                Assert.Equal("my-org", env.Value);
+            },
+            env =>
+            {
+                Assert.Equal("DOCKER_INFLUXDB_INIT_BUCKET", env.Key);
+                Assert.Equal("my-bucket", env.Value);
+            },
+            env =>
+            {
+                Assert.Equal("DOCKER_INFLUXDB_INIT_ADMIN_TOKEN", env.Key);
+                Assert.Equal("my-secret-token", env.Value);
+            });
+    }
+
+    [Fact]
+    public async Task InfluxDBCreatesConnectionString()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        var tokenParameter = appBuilder.AddParameter("token", "my-secret-token");
+        var influxdb = appBuilder
+            .AddInfluxDB("influxdb", token: tokenParameter)
+            .WithEndpoint("http", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 18086));
+
+        using var app = appBuilder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var connectionStringResource = Assert.Single(appModel.Resources.OfType<InfluxDBServerResource>()) as IResourceWithConnectionString;
+        var connectionString = await connectionStringResource.GetConnectionStringAsync();
+
+        Assert.Equal("http://localhost:18086?token=my-secret-token", connectionString);
+        Assert.Equal("http://{influxdb.bindings.http.host}:{influxdb.bindings.http.port}?token={token.value}", connectionStringResource.ConnectionStringExpression.ValueExpression);
     }
 
     [Fact]
@@ -38,23 +114,6 @@ public class AddInfluxDBTests
     }
 
     [Fact]
-    public void VerifyDefaultPort()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        builder.AddInfluxDB("influxdb");
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var resource = Assert.Single(appModel.Resources.OfType<InfluxDBServerResource>());
-
-        var endpoint = Assert.Single(resource.Annotations.OfType<EndpointAnnotation>());
-
-        Assert.Equal(8086, endpoint.TargetPort);
-    }
-
-    [Fact]
     public void VerifyCustomPort()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -70,7 +129,6 @@ public class AddInfluxDBTests
 
         Assert.Equal(12345, endpoint.Port);
     }
-
 
     [Fact]
     public void SpecifiedDataVolumeNameIsUsed()

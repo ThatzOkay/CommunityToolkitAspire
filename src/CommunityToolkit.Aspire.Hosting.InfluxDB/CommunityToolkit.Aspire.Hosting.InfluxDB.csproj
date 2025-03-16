@@ -10,4 +10,8 @@
     <PackageReference Include="AspNetCore.HealthChecks.InfluxDB" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.InfluxDB.Tests"></InternalsVisibleTo>
+  </ItemGroup>
+
 </Project>
