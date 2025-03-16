@@ -1,6 +1,4 @@
-﻿using System.Security.Cryptography.X509Certificates;
-
-namespace CommunityToolkit.Aspire.InfluxDB.Client;
+﻿namespace CommunityToolkit.Aspire.InfluxDB.Client;
 
 /// <summary>
 /// Provides the client configuration settings for connecting to a InfluxDB database.

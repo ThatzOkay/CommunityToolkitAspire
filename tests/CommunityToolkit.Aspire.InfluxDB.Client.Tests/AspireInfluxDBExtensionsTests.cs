@@ -19,7 +19,7 @@ public class AspireInfluxDBExtensionsTests(InfluxDBContainerFixture serverFixtur
 
         Action<InfluxDBClientSettings>? configSettings = null;
 
-        builder.AddKeyedInfluxDBClient(serviceKey: DefaultConnectionName, connectionName: DefaultConnectionName, configureSettings: configSettings);
+        builder.AddKeyedInfluxDBClient(connectionName: DefaultConnectionName, configureSettings: configSettings);
         using var host = builder.Build();
 
         using var client = host.Services.GetRequiredKeyedService<IInfluxDBClient>(DefaultConnectionName);
@@ -27,39 +27,10 @@ public class AspireInfluxDBExtensionsTests(InfluxDBContainerFixture serverFixtur
     }
 
     [Fact]
-    public void AddInfluxDBClient_IsRegisteredWithSettings()
+    public void AddKeyedInfluxDBClient_ClientsAreEqual()
     {
         var builder = CreateBuilder();
-
-        var settings = GetDefaultSettings(DefaultConnectionString);
-
-        builder.AddInfluxDBClient(settings: settings);
-        using var host = builder.Build();
-
-        using var client = host.Services.GetRequiredService<IInfluxDBClient>();
-        Assert.NotNull(client);
-
-    }
-
-    [Fact]
-    public void AddKeyedInfluxDBClient_IsRegisteredWithSettings()
-    {
-        var builder = CreateBuilder();
-
-        var settings = GetDefaultSettings(DefaultConnectionString);
-
-        builder.AddKeyedInfluxDBClient(serviceKey: DefaultConnectionName, settings: settings);
-        using var host = builder.Build();
-
-        using var client = host.Services.GetRequiredKeyedService<IInfluxDBClient>(DefaultConnectionName);
-        Assert.NotNull(client);
-    }
-
-    [Fact]
-    public void AddKeyedInfluxDBClient_ClientsAreNotEqual()
-    {
-        var builder = CreateBuilder();
-        builder.AddKeyedInfluxDBClient(serviceKey: DefaultConnectionName, connectionName: DefaultConnectionName, configureSettings: clientSettings =>
+        builder.AddKeyedInfluxDBClient(connectionName: DefaultConnectionName, configureSettings: clientSettings =>
         {
         });
         using var host = builder.Build();
@@ -67,11 +38,11 @@ public class AspireInfluxDBExtensionsTests(InfluxDBContainerFixture serverFixtur
         using var client1 = host.Services.GetRequiredKeyedService<IInfluxDBClient>(DefaultConnectionName);
         using var client2 = host.Services.GetRequiredKeyedService<IInfluxDBClient>(DefaultConnectionName);
 
-        Assert.NotEqual(client1, client2);
+        Assert.Equal(client1, client2);
     }
 
     [Fact]
-    public void AddInfluxDBClient_ClientsAreNotEqual()
+    public void AddInfluxDBClient_ClientsAreEqual()
     {
         var builder = CreateBuilder();
         builder.AddInfluxDBClient(connectionName: DefaultConnectionName, configureSettings: clientSettings =>
@@ -82,14 +53,14 @@ public class AspireInfluxDBExtensionsTests(InfluxDBContainerFixture serverFixtur
         using var client1 = host.Services.GetRequiredService<IInfluxDBClient>();
         using var client2 = host.Services.GetRequiredService<IInfluxDBClient>();
 
-        Assert.NotEqual(client1, client2);
+        Assert.Equal(client1, client2);
     }
 
     [Fact]
     public void AddKeyedInfluxDBClient_GetRequiredServiceThrows()
     {
         var builder = CreateBuilder();
-        builder.AddKeyedInfluxDBClient(serviceKey: DefaultConnectionName, connectionName: DefaultConnectionName, configureSettings: settings =>
+        builder.AddKeyedInfluxDBClient(connectionName: DefaultConnectionName, configureSettings: settings =>
         {
         });
         using var host = builder.Build();
@@ -102,25 +73,11 @@ public class AspireInfluxDBExtensionsTests(InfluxDBContainerFixture serverFixtur
     {
         var builder = CreateBuilder();
 
-        Assert.Throws<ArgumentNullException>(() =>
+        Assert.Throws<InvalidOperationException>(() =>
         {
             builder.AddInfluxDBClient(connectionName: DefaultConnectionName, configureSettings: settings =>
             {
                 settings.ConnectionString = null;
-            });
-        });
-    }
-
-    [Fact]
-    public void AddInfluxDBClient_InvalidConnectionStringThrows()
-    {
-        var builder = CreateBuilder();
-
-        Assert.Throws<ArgumentException>(() =>
-        {
-            builder.AddInfluxDBClient(connectionName: DefaultConnectionName, configureSettings: settings =>
-            {
-                settings.ConnectionString = "tcp://invalid";
             });
         });
     }
@@ -138,10 +95,10 @@ public class AspireInfluxDBExtensionsTests(InfluxDBContainerFixture serverFixtur
         ];
         var builder = CreateBuilder(config);
 
-        builder.AddKeyedInfluxDBClient(serviceKey: connectionName1, connectionName: connectionName1, configureSettings: clientSettings =>
+        builder.AddKeyedInfluxDBClient(connectionName: connectionName1, configureSettings: clientSettings =>
         {
         });
-        builder.AddKeyedInfluxDBClient(serviceKey: connectionName2, connectionName: connectionName2, configureSettings: clientSettings =>
+        builder.AddKeyedInfluxDBClient(connectionName: connectionName2, configureSettings: clientSettings =>
         {
         });
 
@@ -201,7 +158,7 @@ public class AspireInfluxDBExtensionsTests(InfluxDBContainerFixture serverFixtur
 
         var builder = CreateBuilder();
 
-        builder.AddKeyedInfluxDBClient(serviceKey: DefaultConnectionName, connectionName: DefaultConnectionName, configureSettings: clientSettings =>
+        builder.AddKeyedInfluxDBClient(connectionName: DefaultConnectionName, configureSettings: clientSettings =>
         {
         });
 
@@ -223,7 +180,7 @@ public class AspireInfluxDBExtensionsTests(InfluxDBContainerFixture serverFixtur
 
         var builder = CreateBuilder();
 
-        builder.AddKeyedInfluxDBClient(serviceKey: DefaultConnectionName, connectionName: DefaultConnectionName, configureSettings: clientSettings =>
+        builder.AddKeyedInfluxDBClient(connectionName: DefaultConnectionName, configureSettings: clientSettings =>
         {
             clientSettings.DisableHealthChecks = true;
         });
@@ -247,12 +204,4 @@ public class AspireInfluxDBExtensionsTests(InfluxDBContainerFixture serverFixtur
     [
         new KeyValuePair<string, string?>($"ConnectionStrings:{DefaultConnectionName}", DefaultConnectionString)
     ];
-
-    private static InfluxDBClientSettings GetDefaultSettings(string connectionString)
-    {
-        return new InfluxDBClientSettings
-        {
-            ConnectionString = connectionString
-        };
-    }
 }
