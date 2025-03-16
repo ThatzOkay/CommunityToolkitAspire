@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire.Hosting.ApplicationModel;
@@ -12,14 +12,16 @@ namespace Aspire.Hosting;
 /// </summary>
 public static class InfluxDBResourceBuilderExtensions
 {
-    private const int InfluxDBServerPort = 8086;
-
     /// <summary>
     /// Adds a InfluxDB resource to the application model. A container is used for local development.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to which the resource is added.</param>
     /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
     /// <param name="token">The parameter used to provide the operator token for the InfluxDB. If <see langword="null"/> a random token will be generated.</param>
+    /// <param name="userName">A name for the initial admin user</param>
+    /// <param name="password">A password for the initial admin user</param>
+    /// <param name="initialOrganization">A name for the initial organization⁠</param>
+    /// <param name="initialBucket">A name for the initial bucket</param>
     /// <param name="port">The host port used when launching the container. If null a random port will be assigned.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/> for the InfluxDB server resource.</returns>
     /// <remarks>
@@ -35,6 +37,10 @@ public static class InfluxDBResourceBuilderExtensions
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
         IResourceBuilder<ParameterResource>? token = null,
+        string userName = "my-user",
+        string password = "my-password",
+        string initialOrganization = "my-org",
+        string initialBucket = "my-bucket",
         int? port = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
@@ -64,14 +70,14 @@ public static class InfluxDBResourceBuilderExtensions
 
         return builder
             .AddResource(influxDBServer)
-            .WithEndpoint(port: port, targetPort: InfluxDBServerPort, scheme: InfluxDBServerResource.PrimaryEndpointName, isProxied: false)
+            .WithEndpoint(port: port, targetPort: 8086, scheme: InfluxDBServerResource.PrimaryEndpointName, isProxied: false)
             .WithImage(InfluxDBContainerImageTags.Image, InfluxDBContainerImageTags.Tag)
             .WithImageRegistry(InfluxDBContainerImageTags.Registry)
             .WithEnvironment("DOCKER_INFLUXDB_INIT_MODE", "setup")
-            .WithEnvironment("DOCKER_INFLUXDB_INIT_USERNAME", "username")
-            .WithEnvironment("DOCKER_INFLUXDB_INIT_PASSWORD", "password")
-            .WithEnvironment("DOCKER_INFLUXDB_INIT_ORG", "my-org")
-            .WithEnvironment("DOCKER_INFLUXDB_INIT_BUCKET", "my-bucket")
+            .WithEnvironment("DOCKER_INFLUXDB_INIT_USERNAME", userName)
+            .WithEnvironment("DOCKER_INFLUXDB_INIT_PASSWORD", password)
+            .WithEnvironment("DOCKER_INFLUXDB_INIT_ORG", initialOrganization)
+            .WithEnvironment("DOCKER_INFLUXDB_INIT_BUCKET", initialBucket)
             .WithEnvironment(context =>
             {
                 context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_ADMIN_TOKEN"] = tokenParameter;

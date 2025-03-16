@@ -84,11 +84,11 @@ public static class InfluxDBClientExtension
 
         if (serviceKey is null)
         {
-            builder.Services.AddSingleton<IInfluxDBClient, InfluxDBClient>(ConfigureInfluxDBClient);
+            builder.Services.AddSingleton(ConfigureInfluxDBClient);
         }
         else
         {
-            builder.Services.AddKeyedSingleton<IInfluxDBClient, InfluxDBClient>(serviceKey, (sp, serviceKey) => ConfigureInfluxDBClient(sp));
+            builder.Services.AddKeyedSingleton(serviceKey, (sp, serviceKey) => ConfigureInfluxDBClient(sp));
         }
 
         if (!settings.DisableTracing)
@@ -111,7 +111,7 @@ public static class InfluxDBClientExtension
                     timeout: settings.HealthCheckTimeout > 0 ? TimeSpan.FromMilliseconds(settings.HealthCheckTimeout.Value) : null));
         }
 
-        InfluxDBClient ConfigureInfluxDBClient(IServiceProvider serviceProvider)
+        IInfluxDBClient ConfigureInfluxDBClient(IServiceProvider serviceProvider)
         {
             var httpClient = serviceProvider.GetRequiredService<IHttpClientFactory>().CreateClient(httpClientKey);
 
