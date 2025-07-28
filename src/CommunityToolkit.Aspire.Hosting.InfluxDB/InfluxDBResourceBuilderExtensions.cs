@@ -37,10 +37,10 @@ public static class InfluxDBResourceBuilderExtensions
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
         IResourceBuilder<ParameterResource>? token = null,
-        string userName = "my-user",
-        string password = "my-password",
-        string initialOrganization = "my-org",
-        string initialBucket = "my-bucket",
+        IResourceBuilder<ParameterResource>? userName = null,
+        IResourceBuilder<ParameterResource>? password = null,
+        IResourceBuilder<ParameterResource>? initialOrganization = null,
+        IResourceBuilder<ParameterResource>? initialBucket = null,
         int? port = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
@@ -68,18 +68,23 @@ public static class InfluxDBResourceBuilderExtensions
                 sp => connectionString ?? throw new InvalidOperationException("Connection string is unavailable"),
                 name: healthCheckKey);
 
+        var passwordParameter = password?.Resource ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-password");
+        var userNameParameter = userName?.Resource ?? ParameterResourceBuilderExtensions.CreateParameter(builder, $"{name}-username", false);
+        var initialOrganizationParameter = initialOrganization?.Resource ?? ParameterResourceBuilderExtensions.CreateParameter(builder, $"{name}-organization", false);
+        var initialBucketParameter = initialBucket?.Resource ?? ParameterResourceBuilderExtensions.CreateParameter(builder, $"{name}-bucket", false);
+
         return builder
             .AddResource(influxDBServer)
             .WithEndpoint(port: port, targetPort: InfluxDBServerResource.DefaultHttpPort, scheme: InfluxDBServerResource.PrimaryEndpointName)
             .WithImage(InfluxDBContainerImageTags.Image, InfluxDBContainerImageTags.Tag)
             .WithImageRegistry(InfluxDBContainerImageTags.Registry)
             .WithEnvironment("DOCKER_INFLUXDB_INIT_MODE", "setup")
-            .WithEnvironment("DOCKER_INFLUXDB_INIT_USERNAME", userName)
-            .WithEnvironment("DOCKER_INFLUXDB_INIT_PASSWORD", password)
-            .WithEnvironment("DOCKER_INFLUXDB_INIT_ORG", initialOrganization)
-            .WithEnvironment("DOCKER_INFLUXDB_INIT_BUCKET", initialBucket)
             .WithEnvironment(context =>
             {
+                context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_USERNAME"] = userNameParameter;
+                context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_PASSWORD"] = passwordParameter;
+                context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_ORG"] = initialOrganizationParameter;
+                context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_BUCKET"] = initialBucketParameter;
                 context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_ADMIN_TOKEN"] = tokenParameter;
             })
             .WithHealthCheck(healthCheckKey);
