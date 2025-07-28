@@ -47,8 +47,9 @@ public static class InfluxDBResourceBuilderExtensions
         ArgumentNullException.ThrowIfNull(name, nameof(name));
 
         var tokenParameter = token?.Resource ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-token", special: false);
+        var passwordParameter = password?.Resource ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-password", special: false);
 
-        var influxDBServer = new InfluxDBServerResource(name, tokenParameter);
+        var influxDBServer = new InfluxDBServerResource(name, userName?.Resource, passwordParameter, initialOrganization?.Resource, initialBucket?.Resource, tokenParameter);
 
         string? connectionString = null;
         builder.Eventing.Subscribe<ConnectionStringAvailableEvent>(influxDBServer, async (@event, ct) =>
@@ -68,11 +69,6 @@ public static class InfluxDBResourceBuilderExtensions
                 sp => connectionString ?? throw new InvalidOperationException("Connection string is unavailable"),
                 name: healthCheckKey);
 
-        var passwordParameter = password?.Resource ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-password");
-        var userNameParameter = userName?.Resource ?? ParameterResourceBuilderExtensions.CreateParameter(builder, $"{name}-username", false);
-        var initialOrganizationParameter = initialOrganization?.Resource ?? ParameterResourceBuilderExtensions.CreateParameter(builder, $"{name}-organization", false);
-        var initialBucketParameter = initialBucket?.Resource ?? ParameterResourceBuilderExtensions.CreateParameter(builder, $"{name}-bucket", false);
-
         return builder
             .AddResource(influxDBServer)
             .WithEndpoint(port: port, targetPort: InfluxDBServerResource.DefaultHttpPort, scheme: InfluxDBServerResource.PrimaryEndpointName)
@@ -81,10 +77,10 @@ public static class InfluxDBResourceBuilderExtensions
             .WithEnvironment("DOCKER_INFLUXDB_INIT_MODE", "setup")
             .WithEnvironment(context =>
             {
-                context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_USERNAME"] = userNameParameter;
-                context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_PASSWORD"] = passwordParameter;
-                context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_ORG"] = initialOrganizationParameter;
-                context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_BUCKET"] = initialBucketParameter;
+                context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_USERNAME"] = influxDBServer.UserNameReference;
+                context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_PASSWORD"] = influxDBServer.PasswordParameter;
+                context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_ORG"] = influxDBServer.InitialOrganizationReference;
+                context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_BUCKET"] = influxDBServer.InitialBucketReference;
                 context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_ADMIN_TOKEN"] = tokenParameter;
             })
             .WithHealthCheck(healthCheckKey);

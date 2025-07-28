@@ -48,22 +48,22 @@ public class AddInfluxDBTests
             env =>
             {
                 Assert.Equal("DOCKER_INFLUXDB_INIT_USERNAME", env.Key);
-                Assert.Equal("my-user", env.Value);
+                Assert.Equal("admin", env.Value);
             },
             env =>
             {
                 Assert.Equal("DOCKER_INFLUXDB_INIT_PASSWORD", env.Key);
-                Assert.Equal("my-password", env.Value);
+                Assert.NotEmpty(env.Value);
             },
             env =>
             {
                 Assert.Equal("DOCKER_INFLUXDB_INIT_ORG", env.Key);
-                Assert.Equal("my-org", env.Value);
+                Assert.Equal("influxdata", env.Value);
             },
             env =>
             {
                 Assert.Equal("DOCKER_INFLUXDB_INIT_BUCKET", env.Key);
-                Assert.Equal("my-bucket", env.Value);
+                Assert.Equal("default", env.Value);
             },
             env =>
             {
