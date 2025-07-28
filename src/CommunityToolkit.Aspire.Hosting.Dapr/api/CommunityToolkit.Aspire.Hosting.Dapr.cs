@@ -8,6 +8,13 @@
 //------------------------------------------------------------------------------
 namespace Aspire.Hosting
 {
+    public static partial class DaprMetadataResourceBuilderExtensions
+    {
+        public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> WithMetadata(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> builder, string name, ApplicationModel.ParameterResource parameterResource) { throw null; }
+
+        public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> WithMetadata(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> builder, string name, string value) { throw null; }
+    }
+
     public static partial class IDistributedApplicationBuilderExtensions
     {
         public static IDistributedApplicationBuilder AddDapr(this IDistributedApplicationBuilder builder, System.Action<CommunityToolkit.Aspire.Hosting.Dapr.DaprOptions>? configure = null) { throw null; }
@@ -57,11 +64,36 @@ namespace CommunityToolkit.Aspire.Hosting.Dapr
         public string Type { get { throw null; } }
     }
 
+    public abstract partial class DaprComponentSpecMetadata
+    {
+        [YamlDotNet.Serialization.YamlMember(Order = 1)]
+        public required string Name { get { throw null; } init { } }
+    }
+
+    public sealed partial class DaprComponentSpecMetadataSecret : DaprComponentSpecMetadata
+    {
+        [YamlDotNet.Serialization.YamlMember(Order = 2)]
+        public required DaprSecretKeyRef SecretKeyRef { get { throw null; } set { } }
+    }
+
+    public sealed partial class DaprComponentSpecMetadataValue : DaprComponentSpecMetadata
+    {
+        [YamlDotNet.Serialization.YamlMember(Order = 2)]
+        public required string Value { get { throw null; } set { } }
+    }
+
     public sealed partial record DaprOptions()
     {
         public string? DaprPath { get { throw null; } set { } }
 
         public bool? EnableTelemetry { get { throw null; } set { } }
+    }
+
+    public sealed partial class DaprSecretKeyRef
+    {
+        public required string Key { get { throw null; } init { } }
+
+        public required string Name { get { throw null; } init { } }
     }
 
     public sealed partial record DaprSidecarAnnotation(IDaprSidecarResource Sidecar) : global::Aspire.Hosting.ApplicationModel.IResourceAnnotation
@@ -96,15 +128,21 @@ namespace CommunityToolkit.Aspire.Hosting.Dapr
 
         public int? DaprGrpcPort { get { throw null; } init { } }
 
+        [System.Obsolete("Use DaprMaxBodySize", false)]
         public int? DaprHttpMaxRequestSize { get { throw null; } init { } }
 
         public int? DaprHttpPort { get { throw null; } init { } }
 
+        [System.Obsolete("Use DaprMaxBodySize", false)]
         public int? DaprHttpReadBufferSize { get { throw null; } init { } }
 
         public int? DaprInternalGrpcPort { get { throw null; } init { } }
 
         public string? DaprListenAddresses { get { throw null; } init { } }
+
+        public string? DaprMaxBodySize { get { throw null; } init { } }
+
+        public string? DaprReadBufferSize { get { throw null; } init { } }
 
         public bool? EnableApiLogging { get { throw null; } init { } }
 
