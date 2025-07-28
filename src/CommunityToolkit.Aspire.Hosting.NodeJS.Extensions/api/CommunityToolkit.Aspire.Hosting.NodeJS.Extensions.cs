@@ -12,14 +12,32 @@ namespace Aspire.Hosting
     {
         public static ApplicationModel.IResourceBuilder<NodeAppResource> AddPnpmApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, string scriptName = "start", string[]? args = null) { throw null; }
 
-        public static ApplicationModel.IResourceBuilder<NodeAppResource> AddViteApp(this IDistributedApplicationBuilder builder, string name, string? workingDirectory = null, string packageManager = "npm") { throw null; }
+        public static ApplicationModel.IResourceBuilder<NodeAppResource> AddViteApp(this IDistributedApplicationBuilder builder, string name, string? workingDirectory = null, string packageManager = "npm", bool useHttps = false) { throw null; }
 
         public static ApplicationModel.IResourceBuilder<NodeAppResource> AddYarnApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, string scriptName = "start", string[]? args = null) { throw null; }
 
-        public static ApplicationModel.IResourceBuilder<NodeAppResource> WithNpmPackageInstallation(this ApplicationModel.IResourceBuilder<NodeAppResource> resource, bool useCI = false) { throw null; }
+        public static ApplicationModel.IResourceBuilder<NodeAppResource> WithNpmPackageInstallation(this ApplicationModel.IResourceBuilder<NodeAppResource> resource, bool useCI = false, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.NpmInstallerResource>>? configureInstaller = null) { throw null; }
 
-        public static ApplicationModel.IResourceBuilder<NodeAppResource> WithPnpmPackageInstallation(this ApplicationModel.IResourceBuilder<NodeAppResource> resource) { throw null; }
+        public static ApplicationModel.IResourceBuilder<NodeAppResource> WithPnpmPackageInstallation(this ApplicationModel.IResourceBuilder<NodeAppResource> resource, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.PnpmInstallerResource>>? configureInstaller = null) { throw null; }
 
-        public static ApplicationModel.IResourceBuilder<NodeAppResource> WithYarnPackageInstallation(this ApplicationModel.IResourceBuilder<NodeAppResource> resource) { throw null; }
+        public static ApplicationModel.IResourceBuilder<NodeAppResource> WithYarnPackageInstallation(this ApplicationModel.IResourceBuilder<NodeAppResource> resource, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.YarnInstallerResource>>? configureInstaller = null) { throw null; }
+    }
+}
+
+namespace Aspire.Hosting.ApplicationModel
+{
+    public partial class NpmInstallerResource : ExecutableResource
+    {
+        public NpmInstallerResource(string name, string workingDirectory) : base(default!, default!, default!) { }
+    }
+
+    public partial class PnpmInstallerResource : ExecutableResource
+    {
+        public PnpmInstallerResource(string name, string workingDirectory) : base(default!, default!, default!) { }
+    }
+
+    public partial class YarnInstallerResource : ExecutableResource
+    {
+        public YarnInstallerResource(string name, string workingDirectory) : base(default!, default!, default!) { }
     }
 }
