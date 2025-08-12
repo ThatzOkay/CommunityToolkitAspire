@@ -37,7 +37,7 @@ public class McpInspectorResource(string name) : ExecutableResource(name, "npx",
     /// <summary>
     /// Gets the version of the MCP Inspector.
     /// </summary>
-    public const string InspectorVersion = "0.15.0";
+    public const string InspectorVersion = "0.16.2";
 
     private readonly List<McpServerMetadata> _mcpServers = [];
 
@@ -52,6 +52,11 @@ public class McpInspectorResource(string name) : ExecutableResource(name, "npx",
     /// Gets the default MCP server resource.
     /// </summary>
     public McpServerMetadata? DefaultMcpServer => _defaultMcpServer;
+
+    /// <summary>
+    /// Gets or sets the parameter that contains the MCP proxy authentication token.
+    /// </summary>
+    public ParameterResource ProxyTokenParameter { get; set; } = default!;
 
     internal void AddMcpServer(IResourceWithEndpoints mcpServer, bool isDefault, McpTransportType transportType)
     {
